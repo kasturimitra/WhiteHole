@@ -84,3 +84,24 @@ unnamed_sentiments[1:20, ]%>%
 	xlab(NULL)+
 	ylab("Contribution to Sentiment")
 ggsave("Contribution to Sentiment Bar Graph.png")
+nrow(unnest_tokens(unnamed_df, s, text, token = "sentences")) #6430 sentences; for a better relation, sections can be based off 50 sentences at a time
+unnamed_section50_ns<-unnamed_sentences_ns
+unnamed_section50_ns$section<-unnamed_section50_ns$sentence%/%50
+unnamed_section50_sentiment_ns<-unnamed_section50_ns%>%group_by(section, word)%>%count(word, sort=TRUE)
+unnamed_section50_sentiment_ns<-unnamed_section50_sentiment_ns%>%inner_join(get_sentiments("afinn"))
+unnamed_section50_sentiment_ns%>%
+	group_by(section)%>%
+	mutate(score=score*n)%>%
+	summarize(sentiment=sum(score))%>%
+	ggplot(aes(section, sentiment))+geom_bar(stat='identity')
+ggsave("Sentiment per Section Bar Graph.png")
+unnamed_section50_nskk<-unnamed_section50_ns #step not needed for most documents
+unnamed_section50_nskk<-unnamed_section50_nskk%>%mutate(word=ifelse(word=="katherine", "kate", word)) #kate and katherine are the same person
+unnamed_section50_nskk<-unnamed_section50_nskk%>%group_by(section, word)%>%count(word, sort=TRUE)
+unnamed_section50_nskk%>%
+	filter(word %in% c("kate", "drake", "rena", "mike", "brian", "nelly")) %>%
+	ggplot(aes(section, n, fill=word, colour=word))+geom_bar(stat="identity")+ #make sure it's stat="identity" and not stat=identity; doesn't work otherwise
+	facet_wrap(~word)+
+	xlab("Section")+
+	ylab("Frequency")+
+	ggtitle("Frequency of Character Mentions (section wise)") #how many times was a charcter explicitly mentioned in a section? (pronouns don't count)
