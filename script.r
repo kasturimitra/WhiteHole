@@ -105,3 +105,12 @@ unnamed_section50_nskk%>%
 	xlab("Section")+
 	ylab("Frequency")+
 	ggtitle("Frequency of Character Mentions (section wise)") #how many times was a charcter explicitly mentioned in a section? (pronouns don't count)
+ggsave("Frequency of Character Mentions (section wise).png")
+#what if we wanted a better categorization of sentiments than just negative/positive?
+c%>%
+	inner_join(get_sentiments("loughran"), by = "word") %>%
+	group_by(sentiment) %>%
+	top_n(5,n)%>% #top 5 words from each sentiment
+	ungroup()%>%
+	ggplot(aes(x=reorder(word, n),n, fill=sentiment))+geom_col()+facet_wrap(~sentiment, scales='free')+coord_flip()+scale_fill_brewer(palette="Set2")+xlab("Words")+ylab("Frequency")+ggtitle("Sentiment-wise Word Frequency")
+ggsave("Sentiment-wise Word Frequency Bar Graph (Loughran).png")
