@@ -8,6 +8,7 @@ library(ggraph)
 library(igraph)
 library(widyr)
 
+#loading text/data
 data(stop_words)
 unnamed<-read_docx("F:/Kasturi/Unnamed.docx")
 unnameddf<-data_frame(unnamed)
@@ -19,6 +20,9 @@ colnames(unnamed_df)<-"text"
 unnamed_words<-unnest_tokens(unnamed_df, words, text)
 colnames(unnamed_words)<-"word"
 unnamed_words_ns<-anti_join(unnamed_words, stop_words)
+
+#visualizing word frequencies
+#which words used the most?
 c<-count(unnamed_words_ns, word, sort=TRUE)
 #windows() #for better visibility/saving ideal graph
 c[1:50,]%>%ggplot(aes(x=reorder(word, n), y=n, fill=n))+geom_bar(stat='identity')+coord_flip() #bar chart top 50 words
@@ -30,6 +34,8 @@ customPuRd<-brewer.pal(9, "PuRd") #redefining palette; excluding lighter colours
 customPuRd<-customPuRd[-(1:2)]
 wordcloud(c$word, c$n, max.words = 100, random.order = FALSE, colors=colorRampPalette(customPuRd)(length(unique(c$n))))
 wordcloud(c$word, c$n, max.words = 100, random.order = FALSE, colors=colorRampPalette(customPuRd)(length(unique(c$n[1:100])))) #only takes unique values for top 100
+
+#visualizing relations between adjacent words
 unnamed_ngrams<-unnest_tokens(unnamed_df, bigram, text, token='ngrams', n=2)
 c_ngram<-count(unnamed_ngrams, bigram, sort=TRUE)
 split_c_ngram<-separate(c_ngram, bigram, c("word1", "word2"), sep = " ")
@@ -55,6 +61,8 @@ ggraph(bigram_graph, layout = "fr") +
 	geom_node_point(color = "lightblue", size = 5) +
 	geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
 	theme_void()
+
+#visualizing relation between words; which were words appear in each other's vicinity
 unnamed_sentences<-unnest_tokens(unnamed_df, s, text, token = "sentences")
 unnamed_sentences$sentence<-c(1:length(unnamed_sentences$s))
 unnamed_sentences<-unnest_tokens(unnamed_sentences, word, s, token="words")
@@ -73,6 +81,8 @@ section_cor%>%
 	geom_node_text(aes(label = name), colour="#dddddd",repel = TRUE, size=3.2, vjust=1) +
 	theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill="#222222"), panel.border = element_blank(), axis.title.x=element_blank(), axis.title.y=element_blank(), axis.line=element_blank(), axis.text.x=element_blank(), axis.text.y=element_blank(),axis.ticks=element_blank(),) #correlation graph without external borders or axes
 ggsave("Correlation of Words v2 (better quality).png") #saving internally for higher res
+
+#categorizing and visualizing sentiments
 unnamed_sentiments<-c%>%
 	inner_join(get_sentiments("bing")) #marking negative/positive word-wise
 customRdBu<-rev(brewer.pal(10, "RdBu")) #reverses palette, could also be done directly from scale_fill_gradient_n
@@ -95,17 +105,6 @@ unnamed_section50_sentiment_ns%>%
 	summarize(sentiment=sum(score))%>%
 	ggplot(aes(section, sentiment))+geom_bar(stat='identity')
 ggsave("Sentiment per Section Bar Graph.png")
-unnamed_section50_nskk<-unnamed_section50_ns #step not needed for most documents
-unnamed_section50_nskk<-unnamed_section50_nskk%>%mutate(word=ifelse(word=="katherine", "kate", word)) #kate and katherine are the same person
-unnamed_section50_nskk<-unnamed_section50_nskk%>%group_by(section, word)%>%count(word, sort=TRUE)
-unnamed_section50_nskk%>%
-	filter(word %in% c("kate", "drake", "rena", "mike", "brian", "nelly")) %>%
-	ggplot(aes(section, n, fill=word, colour=word))+geom_bar(stat="identity")+ #make sure it's stat="identity" and not stat=identity; doesn't work otherwise
-	facet_wrap(~word)+
-	xlab("Section")+
-	ylab("Frequency")+
-	ggtitle("Frequency of Character Mentions (section wise)") #how many times was a charcter explicitly mentioned in a section? (pronouns don't count)
-ggsave("Frequency of Character Mentions (section wise).png")
 #what if we wanted a better categorization of sentiments than just negative/positive?
 c%>%
 	inner_join(get_sentiments("loughran"), by = "word") %>%
@@ -114,3 +113,18 @@ c%>%
 	ungroup()%>%
 	ggplot(aes(x=reorder(word, n),n, fill=sentiment))+geom_col()+facet_wrap(~sentiment, scales='free')+coord_flip()+scale_fill_brewer(palette="Set2")+xlab("Words")+ylab("Frequency")+ggtitle("Sentiment-wise Word Frequency")
 ggsave("Sentiment-wise Word Frequency Bar Graph (Loughran).png")
+
+#visualizing word frequencies through all sections
+#how many times was a charcter explicitly mentioned in a section? (pronouns don't count)
+unnamed_section50_nskk<-unnamed_section50_ns #step not needed for most documents
+unnamed_section50_nskk<-unnamed_section50_nskk%>%mutate(word=ifelse(word=="katherine", "kate", word)) #kate and katherine are the same person
+unnamed_section50_nskk<-unnamed_section50_nskk%>%group_by(section, word)%>%count(word, sort=TRUE)
+unnamed_section50_nskk%>%
+	filter(word %in% c("kate", "drake", "rena", "mike", "brian", "nelly")) %>% #change names accordingly
+	ggplot(aes(section, n, fill=word, colour=word))+geom_bar(stat="identity")+ #make sure it's stat="identity" and not stat=identity; doesn't work otherwise
+	facet_wrap(~word)+
+	xlab("Section")+
+	ylab("Frequency")+
+	ggtitle("Frequency of Character Mentions (section wise)") #instead of characters, keywords of a document may also be used
+ggsave("Frequency of Character Mentions (section wise).png")
+
