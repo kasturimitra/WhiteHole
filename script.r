@@ -22,7 +22,7 @@ colnames(unnamed_words)<-"word"
 unnamed_words_ns<-anti_join(unnamed_words, stop_words)
 
 #visualizing word frequencies
-#which words used the most?
+#which words were used the most?
 c<-count(unnamed_words_ns, word, sort=TRUE)
 #windows() #for better visibility/saving ideal graph
 c[1:50,]%>%ggplot(aes(x=reorder(word, n), y=n, fill=n))+geom_bar(stat='identity')+coord_flip() #bar chart top 50 words
