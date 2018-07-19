@@ -62,7 +62,7 @@ ggraph(bigram_graph, layout = "fr") +
 	geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
 	theme_void()
 
-#visualizing relation between words; which were words appear in each other's vicinity
+#visualizing relation between words; which words appear in each other's vicinity
 unnamed_sentences<-unnest_tokens(unnamed_df, s, text, token = "sentences")
 unnamed_sentences$sentence<-c(1:length(unnamed_sentences$s))
 unnamed_sentences<-unnest_tokens(unnamed_sentences, word, s, token="words")
@@ -115,7 +115,7 @@ c%>%
 ggsave("Sentiment-wise Word Frequency Bar Graph (Loughran).png")
 
 #visualizing word frequencies through all sections
-#how many times was a charcter explicitly mentioned in a section? (pronouns don't count)
+#how many times was a character explicitly mentioned in a section? (pronouns don't count)
 unnamed_section50_nskk<-unnamed_section50_ns #step not needed for most documents
 unnamed_section50_nskk<-unnamed_section50_nskk%>%mutate(word=ifelse(word=="katherine", "kate", word)) #kate and katherine are the same person
 unnamed_section50_nskk<-unnamed_section50_nskk%>%group_by(section, word)%>%count(word, sort=TRUE)
