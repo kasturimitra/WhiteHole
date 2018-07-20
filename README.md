@@ -13,5 +13,7 @@ unnamed<-read_docx(file="path/file-name.docx")
 ```
 For documents in other formats (eg .txt) the function **read_docx** can be replaced with its file type compatible counterparts (eg **read_txt**). Visit [R Documentation](https://www.rdocumentation.org/) for more help.
 
+Please note that some of the code is White Hole specific, and needs to be modified slightly to suit other documents. The required changes have been mentioned in the comments.
+
 # Authors
 [Kasturi Mitra](https://github.com/kasturimitra)
